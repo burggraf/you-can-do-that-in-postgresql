@@ -118,3 +118,22 @@ But we've used this exercise to demonstrate how to:
 - cast data into a specific type so it can be used in a calculation
 
 I hope this gets your mind wandering into all the fun places you can use the `HTTP` PostgreSQL extension to simplify your application development.
+
+### One more thing...
+Oh yeah, we promised we could update these exchange rates daily.  Do we need to run that `update` command every day manualy?  Heck no!  Enter the `pg_cron` extension, which mimics the `cron` process in `linux` but all within the friendly confines of PostgreSQL. See: [pg_cron GitHub Page](https://github.com/citusdata/pg_cron)
+
+```sql
+-- load the PG_CRON extension
+create extension if not exists PG_CRON;
+-- run our update command from above every day at 2 am
+select cron.schedule('update currency exchange rates', '0 2 * * *', 
+$$ 
+update currency_exchange_rates
+  set currencies = 
+    (select content from http_get('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.json'))::JSONB,
+  prices = 
+    (select content from http_get('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd.json'))::JSONB;
+$$);
+-- turn off the job using:
+-- SELECT cron.unschedule('update currency exchange rates');
+```
