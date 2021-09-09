@@ -102,9 +102,11 @@ Or maybe you just want to get the price of `Earl Gray` tea in `Euros`?
 select price * (select prices->'usd'->'eur' from currency_exchange_rates limit 1)::numeric as eur_price
  from tea where id = 'earl';
 ```
+
 | eur_price   |
 | ----------- |
 | 11.83993286 |
+
 This `SQL` starts with the simple command `select price from tea where id = 'earl';`  Then we multiple the price by the current exchange rate for Euros, `eur`, which we get using the subquery `select prices->'usd'->'eur' from currency_exchange_rates limit 1` which we force to a numeric with `::numeric`.
 
 We are using the `JSON` `->` [operators](https://www.postgresql.org/docs/9.5/functions-json.html) to get to the `eur` exchange rate.  Basically we just say "grab the `JSONB` data in the `prices` column, then grab the `usd` object from that, and then grab the `eur` object inside of that.  It's pretty easy to drill down into nested `JSON` objects this way.  Of course, this isn't a scalable way to do this process and I wouldn't recommend this approach for a large production app.
